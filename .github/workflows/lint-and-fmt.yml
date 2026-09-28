@@ -9,11 +9,11 @@ on:
 
 jobs:
   lint-and-fmt-python:
-    if: github.repository == 'PFCCLab/google-yamlfmt'
+    if: github.repository == 'ShigureLab/google-yamlfmt'
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.9"]
+        python-version: ["3.11"]
         architecture: ["x64"]
     name: Lint and Format (Python)
     steps:

@@ -15,7 +15,7 @@ This repository provides a Python package wrapper for Google's `yamlfmt` tool, e
 
 ## Installation
 
-To install google-yamlfmt, ensure you have Python 3.9 or higher, then run:
+To install google-yamlfmt, ensure you have Python 3.11 or higher, then run:
 
 ```bash
 pip install google-yamlfmt

@@ -5,7 +5,7 @@ description = "A tool for formatting YAML files, yamlfmt from Google: https://gi
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 dependencies = []
 
 [project.urls]
