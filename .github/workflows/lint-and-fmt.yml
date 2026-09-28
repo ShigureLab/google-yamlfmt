@@ -9,7 +9,7 @@ on:
 
 jobs:
   lint-and-fmt-python:
-    if: github.repository == 'PFCCLab/google-yamlfmt' || github.repository == 'ShigureLab/google-yamlfmt'
+    if: github.repository == 'ShigureLab/google-yamlfmt'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -35,6 +35,6 @@ jobs:
           CIBW_ARCHS: "x86_64"
           CIBW_PLATFORM: "manylinux_2_17"
         run: |
-          uv sync --locked --all-extras --dev
+          uv sync --all-extras --dev
 
       - uses: pre-commit/action@v3.0.1

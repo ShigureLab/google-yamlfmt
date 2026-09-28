@@ -15,12 +15,7 @@ This repository provides a Python package wrapper for Google's `yamlfmt` tool, e
 
 ## Installation
 
-This fork requires Python 3.11 or higher; Python 3.9 and 3.10 are no longer supported.
-CI tests installed wheels on Python 3.11–3.15, including free-threaded Python 3.15 (`3.15t`),
-on Linux, macOS, and Windows. Python 3.15 testing uses prereleases until its final release.
-This is the support policy of the ShigureLab fork, not a change to upstream's published releases.
-
-To install google-yamlfmt from PyPI, run:
+To install google-yamlfmt, ensure you have Python 3.11 or higher, then run:
 
 ```bash
 pip install google-yamlfmt
