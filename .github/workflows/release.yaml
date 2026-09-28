@@ -13,16 +13,12 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.11"]
-        include:
-          - {os: ubuntu-latest, python-version: "3.15"}
-          - {os: ubuntu-latest, python-version: "3.15t"}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - uses: actions/setup-python@v6
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.15"
           allow-prereleases: true
       - uses: actions/setup-go@v5
         with:
@@ -35,17 +31,6 @@ jobs:
         run: |
           uv venv --python python
           uv build --python python
-
-      - name: Verify free-threaded runtime
-        if: matrix.python-version == '3.15t'
-        run: |
-          .venv/bin/python - <<'PY'
-          import sys, sysconfig
-          print(sys.version)
-          assert sys.version_info[:2] == (3, 15)
-          assert sysconfig.get_config_var("Py_GIL_DISABLED") == 1
-          assert not sys._is_gil_enabled()
-          PY
 
       - name: Install package and test
         if: matrix.os != 'windows-latest'
@@ -61,6 +46,15 @@ jobs:
           $whl = Get-ChildItem dist\*.whl | Select-Object -First 1
           uv pip install --no-deps --force-reinstall $whl.FullName
           python tests\test_yamlfmt.py
+
+      - name: Test existing wheel on free-threaded Python
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          uv venv --clear --python 3.15t
+          source .venv/bin/activate
+          uv pip install --no-deps dist/*.whl
+          python -c "import sys; assert not sys._is_gil_enabled()"
+          python tests/test_yamlfmt.py
 
 
   release-build:
