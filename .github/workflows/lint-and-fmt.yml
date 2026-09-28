@@ -9,11 +9,11 @@ on:
 
 jobs:
   lint-and-fmt-python:
-    if: github.repository == 'PFCCLab/google-yamlfmt'
+    if: github.repository == 'PFCCLab/google-yamlfmt' || github.repository == 'ShigureLab/google-yamlfmt'
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.9"]
+        python-version: ["3.11"]
         architecture: ["x64"]
     name: Lint and Format (Python)
     steps:
@@ -35,6 +35,6 @@ jobs:
           CIBW_ARCHS: "x86_64"
           CIBW_PLATFORM: "manylinux_2_17"
         run: |
-          uv sync --all-extras --dev
+          uv sync --locked --all-extras --dev
 
       - uses: pre-commit/action@v3.0.1

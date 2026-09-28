@@ -5,9 +5,11 @@ Test suite for yamlfmt functionality across different platforms.
 
 from __future__ import annotations
 
+import os
 import platform
 import subprocess
 import sys
+import sysconfig
 import tempfile
 import unittest
 from pathlib import Path
@@ -69,8 +71,22 @@ list:
 
             self.assertEqual(result.returncode, 0, f"yamlfmt formatting failed: {result.stderr}")
 
-            # Check that the formatted file still exists
-            self.assertTrue(temp_file.is_file(), f"Temporary file {temp_file} does not exist after formatting")
+            self.assertEqual(
+                temp_file.read_text(),
+                "# Test YAML file\n"
+                "name: test\n"
+                "version: 1.0.0\n"
+                "dependencies:\n"
+                "  - package1\n"
+                "  - package2\n"
+                "config:\n"
+                "  setting1: value1\n"
+                "  setting2: value2\n"
+                "list:\n"
+                "  - item1\n"
+                "  - item2\n"
+                "  - item3\n",
+            )
 
         finally:
             # Clean up temporary file
@@ -89,32 +105,31 @@ list:
         self.assertEqual(result.returncode, 0, f"yamlfmt help command failed: {result.stderr}")
 
     def test_module_import(self):
-        """Test that the yamlfmt module can be imported correctly."""
-        # Add src directory to Python path
-        test_dir = Path(__file__).parent
-        src_dir = test_dir.parent / "src"
+        """Test the installed wheel, without falling back to the source tree."""
+        import yamlfmt
 
-        if src_dir.exists() and str(src_dir) not in sys.path:
-            sys.path.insert(0, str(src_dir))
+        self.assertEqual(yamlfmt.BIN_NAME, "yamlfmt")
+        self.assertIsNotNone(yamlfmt.__version__)
+        src_dir = Path(__file__).resolve().parents[1] / "src"
+        self.assertFalse(Path(yamlfmt.__file__).resolve().is_relative_to(src_dir))
 
-        try:
-            # Try to import yamlfmt module
-            import yamlfmt
+    def test_console_script(self):
+        """Test the wheel's installed console entry point as well as python -m."""
+        result = subprocess.run(["yamlfmt", "-version"], capture_output=True, text=True, timeout=30, check=False)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(result.stdout.strip())
 
-            # Check that BIN_NAME exists and is correct
-            self.assertTrue(hasattr(yamlfmt, "BIN_NAME"), "yamlfmt module should have BIN_NAME attribute")
-            self.assertEqual(yamlfmt.BIN_NAME, "yamlfmt", f"Expected BIN_NAME to be 'yamlfmt', got {yamlfmt.BIN_NAME}")
-
-            # Check that __version__ exists
-            self.assertTrue(hasattr(yamlfmt, "__version__"), "yamlfmt module should have __version__ attribute")
-            self.assertIsNotNone(yamlfmt.__version__, "yamlfmt version should not be None")
-
-        except ImportError as e:
-            self.fail(f"Failed to import yamlfmt module: {e}")
-        finally:
-            # Remove src directory from path if we added it
-            if src_dir.exists() and str(src_dir) in sys.path:
-                sys.path.remove(str(src_dir))
+    def test_runtime_identity(self):
+        """Fail CI if interpreter selection silently falls back to another runtime."""
+        expected = os.environ.get("EXPECTED_PYTHON_VERSION")
+        if expected is None:
+            self.skipTest("Set EXPECTED_PYTHON_VERSION to check the selected interpreter")
+        self.assertEqual(platform.python_implementation(), "CPython")
+        self.assertEqual(f"{sys.version_info.major}.{sys.version_info.minor}", expected.removesuffix("t"))
+        free_threaded = expected.endswith("t")
+        self.assertEqual(bool(sysconfig.get_config_var("Py_GIL_DISABLED")), free_threaded)
+        if free_threaded:
+            self.assertFalse(sys._is_gil_enabled(), "The free-threaded test must run with the GIL disabled")
 
     def test_system_info(self):
         """Display system information for debugging."""
@@ -126,6 +141,8 @@ list:
             "Processor": platform.processor(),
             "Python Version": sys.version,
             "Python Executable": sys.executable,
+            "Py_GIL_DISABLED": sysconfig.get_config_var("Py_GIL_DISABLED"),
+            "GIL Enabled": sys._is_gil_enabled() if hasattr(sys, "_is_gil_enabled") else True,
         }
 
         print("\n" + "=" * 50)
