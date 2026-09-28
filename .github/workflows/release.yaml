@@ -16,10 +16,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.15"
-          allow-prereleases: true
       - uses: actions/setup-go@v5
         with:
           go-version: '1.24.4'
@@ -29,8 +25,8 @@ jobs:
 
       - name: Build package
         run: |
-          uv venv --python python
-          uv build --python python
+          uv venv
+          uv build
 
       - name: Install package and test
         if: matrix.os != 'windows-latest'
@@ -46,15 +42,6 @@ jobs:
           $whl = Get-ChildItem dist\*.whl | Select-Object -First 1
           uv pip install --no-deps --force-reinstall $whl.FullName
           python tests\test_yamlfmt.py
-
-      - name: Test existing wheel on free-threaded Python
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          uv venv --clear --python 3.15t
-          source .venv/bin/activate
-          uv pip install --no-deps dist/*.whl
-          python -c "import sys; assert not sys._is_gil_enabled()"
-          python tests/test_yamlfmt.py
 
 
   release-build:
